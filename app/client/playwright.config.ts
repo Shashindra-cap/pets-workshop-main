@@ -6,7 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serverDir = path.resolve(__dirname, '..', 'server');
 const testDbPath = path.join(serverDir, 'e2e_test_dogshelter.db');
 const flaskPort = 5100;
-const astroDevPort = 4321;
+const nextDevPort = 4321;
+const apiProxyPort = 5101;
 
 export default defineConfig({
   testDir: './e2e-tests',
@@ -16,7 +17,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: `http://localhost:${astroDevPort}`,
+    baseURL: `http://localhost:${nextDevPort}`,
     trace: 'on-first-retry',
   },
   projects: [
@@ -33,8 +34,14 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: `npx cross-env API_SERVER_URL=http://localhost:${flaskPort} npm run dev -- --no-clearScreen`,
-      url: `http://localhost:${astroDevPort}`,
+      command: `node start-mock-api.js`,
+      url: `http://localhost:${apiProxyPort}/health`,
+      reuseExistingServer: false,
+      timeout: 30_000,
+    },
+    {
+      command: `npx cross-env API_SERVER_URL=http://localhost:${apiProxyPort} npm run dev`,
+      url: `http://localhost:${nextDevPort}`,
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
