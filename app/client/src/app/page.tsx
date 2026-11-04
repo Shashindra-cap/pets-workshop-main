@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import CursorDog from '../components/CursorDog';
 import DogList from '../components/DogList';
 
 export const metadata: Metadata = {
@@ -60,11 +61,14 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <div className="py-8">
-      <div className="mb-10 max-w-3xl">
-        <h1 className="mb-4 text-4xl font-bold text-slate-100">Welcome to Tailspin Shelter</h1>
-        <p className="text-xl text-slate-300">
-          Find your perfect companion from our wonderful selection of dogs looking for their forever homes.
-        </p>
+      <div className="mb-10 flex max-w-4xl flex-col items-start gap-5 sm:flex-row sm:items-center">
+        <div className="max-w-3xl">
+          <h1 className="mb-4 text-4xl font-bold text-slate-100">Welcome to Tailspin Shelter</h1>
+          <p className="text-xl text-slate-300">
+            Find your perfect companion from our wonderful selection of dogs looking for their forever homes.
+          </p>
+        </div>
+        <CursorDog />
       </div>
 
       {error ? (
