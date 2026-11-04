@@ -1,0 +1,65 @@
+[[entry]]
+id = 1
+type = "story"
+title = "Scaffold Next.js and migrate dog listing"
+description = "Creates the App Router, TypeScript, and Tailwind client and shared site shell/navigation, configures the Flask list API through API_SERVER_URL, and preserves the homepage listing, pagination, empty/error states, and test IDs."
+verify = "With the Next.js app running, confirm the home page and shared navigation render; the homepage test run passes unchanged assertions and checks empty/error text and hooks, with six API dogs on page 1 and the next four on page 2."
+covers = ["R1", "R2", "R3"]
+after = []
+hitl = true
+risk = "high"
+
+[[entry]]
+id = 2
+type = "story"
+title = "Migrate dog details and errors"
+description = "Adds the existing dog-detail route using the Flask detail API, consumes the shared site shell/navigation, and preserves detail content, status labels, test IDs, and all current error states."
+verify = "The dog-detail test run passes unchanged assertions for Buddy and missing dog ID 99999 and checks the existing error messages and hooks."
+covers = ["R1", "R2", "R3"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 3
+type = "story"
+title = "Migrate About page using shared navigation"
+description = "Adds the existing About route, consumes the shared site shell/navigation, and preserves the shelter copy, responsive layout, and return link with its current test IDs."
+verify = "The unchanged About-page assertions pass for the existing story, fictional-organization note, and Back to Dogs link."
+covers = ["R1", "R3"]
+after = [1]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 4
+type = "story"
+title = "Update local startup scripts"
+description = "Updates start-app.sh and start-app.ps1 to start Flask and the Next.js client at the existing local service ports."
+verify = "Both startup scripts start Flask on port 5100 and Next.js on port 4321, and the home page responds."
+covers = ["R4"]
+after = [1]
+hitl = false
+risk = "medium"
+
+[[entry]]
+id = 5
+type = "story"
+title = "Refactor sweep"
+description = "Cleans up only deferred code-quality issues found in the implementation plans and reviews, with scope set at the start of the sweep."
+verify = "The cleanup is complete and all affected story-level checks pass."
+covers = []
+after = [1, 2, 3, 4]
+hitl = false
+risk = "low"
+
+[[entry]]
+id = 6
+type = "story"
+title = "Verify unchanged Playwright suite and visual parity"
+description = "Runs the existing 15 Playwright tests without changing their assertions and has a person compare the migrated pages and error states with the Astro reference on desktop and mobile."
+verify = "All 15 existing Playwright tests pass unchanged, and the person confirms the home page, pagination, dog details, About, and error states match the Astro reference on desktop and mobile."
+covers = ["R3"]
+after = [5]
+hitl = true
+risk = "high"
