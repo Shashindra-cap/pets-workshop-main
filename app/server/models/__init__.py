@@ -5,6 +5,7 @@ db = SQLAlchemy()
 # Import models after db is defined to avoid circular imports
 from .breed import Breed
 from .dog import Dog
+from .adoption_request import AdoptionRequest
 
 # Initialize function to be called from app.py
 def init_db(app):

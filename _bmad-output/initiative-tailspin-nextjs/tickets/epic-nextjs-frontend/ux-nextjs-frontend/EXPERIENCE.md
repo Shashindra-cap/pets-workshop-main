@@ -3,14 +3,14 @@ name: Tailspin Shelter — Experience
 status: final
 sources:
   - ../epic-nextjs-frontend.md
-updated: 2026-11-04
+updated: 2026-11-05
 ---
 
 # Tailspin Shelter — Experience Spine
 
 ## Foundation
 
-Responsive website for desktop and mobile browsers. The experience is a faithful migration of the current Astro site; no additional UI system is prescribed. `DESIGN.md` is the visual identity reference and owns component appearance. This spine owns routes, content, behavior, states, and accessibility behavior.
+Responsive website for desktop and mobile browsers. The experience preserves the current Astro site while adding the adoption request flow described below; no additional UI system is prescribed. `DESIGN.md` is the visual identity reference and owns component appearance. This spine owns routes, content, behavior, states, and accessibility behavior.
 
 The epic ticket's R1–R4 are the source brief. This contract records their observable UX consequences without replacing or restating the implementation requirements. The Astro pages and components under `app/client/src/` are the fidelity reference for current layout, copy, navigation, and state handling.
 
@@ -19,7 +19,7 @@ The epic ticket's R1–R4 are the source brief. This contract records their obse
 | Surface | Path | Reached from | Purpose |
 |---|---|---|---|
 | Home / dog listing | `/` and `/?page={n}` | Home navigation link; Back links | Browse the current page of available dogs; page size is six. |
-| Dog details | `/dog/{id}` | Selecting a dog card | Read that dog's name, status, breed, age, gender, and description. |
+| Dog details | `/dog/{id}` | Selecting a dog card | Read that dog's name, status, breed, age, gender, and description; submit an adoption request when the dog is available. |
 | About | `/about` | About navigation link | Read the existing shelter story and fictional-organization note. |
 
 The shared header links to Home (`/`) and About (`/`). The home listing owns pagination; dog details and About each provide an in-content link back to `/`.
@@ -42,6 +42,8 @@ Preserve the site's existing wording, capitalization, punctuation, and dynamic t
 | Dog statuses | `Available` · `Pending Adoption` · `Adopted` |
 | Dog-details fallback | `No dog information available` |
 | Dog-details back link | `Back to All Dogs` |
+| Adoption form | `Request to Adopt` · `Your name` · `Your email` · `Submit adoption request` |
+| Adoption success | `Your adoption request has been submitted.` |
 | About heading and note | `About Tailspin Shelter` · `Note:` · `Tailspin Shelter is a fictional organization, created for this workshop.` |
 | About back link | `Back to Dogs` |
 
@@ -63,7 +65,8 @@ This section covers behavior; visual treatment is specified in the Components se
 | Dog list | Home listing | Show “Available Dogs” and either the returned cards or the current empty state. A listing failure shows the error surface instead of the list. |
 | Dog card | Home listing | The entire card is one link to `/dog/{id}`. It contains the API-provided name and breed and the `View details` label. |
 | Pagination | Home listing with multiple pages | Render only when `totalPages > 1`. An available direction is a link to `/?page={n}`; an unavailable direction is a non-interactive span. Show the current `Page {page} of {totalPages}`. |
-| Dog details | Dog detail route | Show name, status, breed, age, gender, and description. Render singular `year` only for age 1. Map `AVAILABLE` to `Available`, `PENDING` to `Pending Adoption`, and the remaining status branch to `Adopted`. |
+| Dog details | Dog detail route | Show name, status, breed, age, gender, and description. Render singular `year` only for age 1. Map `AVAILABLE` to `Available`, `PENDING` to `Pending Adoption`, and the remaining status branch to `Adopted`. Show the adoption form only for `AVAILABLE` dogs. |
+| Adoption form | Available dog details | Collect the adopter's name and email and submit them to the adoption API. On success, show the confirmation and refreshed `Pending Adoption` status; on failure, show an error without claiming success. |
 | Back links | Dog details and About | “Back to All Dogs” and “Back to Dogs” both navigate to `/`; retain the distinct labels. |
 | About panel | About route | Display the two exact paragraphs and fictional-organization note in their current order, followed by the “Back to Dogs” link. |
 | Error surfaces | Home listing and dog details | Show the existing route-specific error message and keep each route's currently available navigation. Do not invent error actions. |
@@ -73,6 +76,7 @@ Keep the current `data-testid` hooks and their scope so the unchanged Playwright
 - Home/list: `error-message`, `empty-state`, `dog-list`, `dog-card`, `dog-name`, `dog-breed`.
 - Pagination: `pagination`, `pagination-prev`, `pagination-info`, `pagination-next`. The `prev` and `next` hooks are on the available links only; disabled directions remain untagged spans.
 - Dog details: `dog-details`, `dog-name`, `dog-status`, `dog-breed`, `dog-age`, `dog-gender`, `dog-description`, `back-link`.
+- Adoption form and feedback: `adoption-form`, `adoption-name`, `adoption-email`, `adoption-submit`, `adoption-success`, `adoption-error`.
 - About: `back-link`.
 
 Repeated hooks such as `dog-name` and `dog-breed` remain repeated per dog card; do not rename, move, or deduplicate them.
@@ -89,6 +93,10 @@ Repeated hooks such as `dog-name` and `dog-breed` remain repeated per dog card; 
 | One-page result | Home | Omit pagination. |
 | First / last page | Home | The unavailable Previous / Next control is a muted, non-interactive span with its existing arrow label; only the available direction is a link. |
 | Dog found | Dog details | Render the detail panel and the status text corresponding to the API status. |
+| Available dog | Dog details | Render the adoption form with required name and valid email fields. |
+| Adoption request accepted | Dog details | Persist the request, show `Your adoption request has been submitted.`, refresh the dog status to `Pending Adoption`, and remove the form. |
+| Invalid adoption input | Dog details | Keep the status unchanged and associate validation feedback with the invalid field. |
+| Adoption request rejected | Dog details | Keep the status unchanged and show the API error; a non-available dog has no form. |
 | Dog not found (HTTP 404) | Dog details | Render `error-message` with `Dog not found`; keep the `Back to All Dogs` link available. |
 | Other dog HTTP failure | Dog details | Render `error-message` with `Failed to fetch dog: {status} {statusText}`; keep the back link available. |
 | Dog request failure | Dog details | Render `error-message` with `Error: {error.message}` (or `Error: {String(error)}` for a non-`Error` thrown value); keep the back link available. |
@@ -102,11 +110,11 @@ Repeated hooks such as `dog-name` and `dog-breed` remain repeated per dog card; 
 - An unavailable pagination direction is not an active link and cannot be activated.
 - Preserve existing pointer hover treatments as visual feedback; navigation remains available through the semantic links and keyboard operation.
 - Keep keyboard focus on native links visible using the browser's native focus behavior; preserve a logical focus and reading order.
-- Dog information is read-only on these pages. No adoption, contact, search, or editing interaction is part of this experience.
+- Dog information remains read-only except for submitting an adoption request on an Available dog's detail page. The request collects a name and email; it is not an account, search, or editing flow.
 
 ## Accessibility Floor
 
-Use semantic navigation and native keyboard-operable anchors for all current navigation controls. Keep the existing headings, text, and controls as real text and links rather than replacing them with non-semantic click targets. Preserve reading order and the actual content hierarchy. This is the agreed interaction floor; it is not a claim of formal WCAG conformance or a new accessibility audit.
+Use semantic navigation and native keyboard-operable anchors for all current navigation controls. Use a native form with associated labels, required name/email fields, and visible field-level or submission feedback. Keep headings, text, and controls semantic, and preserve reading order. This is the agreed interaction floor; it is not a claim of formal WCAG conformance or a new accessibility audit.
 
 Retain native anchor keyboard-focus behavior; do not suppress it or replace links with non-semantic click targets. Visual styling is governed by `DESIGN.md`; this contract does not add a contrast threshold or a custom focus treatment.
 
@@ -132,7 +140,15 @@ Retain native anchor keyboard-focus behavior; do not suppress it or replace link
 
 Failure and empty outcomes: a listing/API failure displays its exact current error text while retaining the home introduction; an empty response displays `No dogs available at the moment.`; a missing dog displays `Dog not found` and keeps the back link available.
 
-### Flow 2 — Read about the shelter (Riley)
+### Flow 2 — Request to adopt an available dog (Riley)
+
+1. Riley opens an Available dog's detail page from its card.
+2. The page shows the current dog details and a form for Riley's name and email.
+3. Riley submits the form; validation or API failures are shown without changing the displayed status to success.
+4. **Climax:** After the shelter API accepts and stores the request, the dog's status changes to `Pending Adoption`, the form is removed, and Riley sees `Your adoption request has been submitted.`.
+5. A direct request for a Pending or Adopted dog is rejected and creates no application.
+
+### Flow 3 — Read about the shelter (Riley)
 
 1. Riley follows `About` in the shared header to `/about`.
 2. The page shows the current shelter story and the note that the organization is fictional.

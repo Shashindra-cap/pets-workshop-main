@@ -4,7 +4,7 @@ description: Visual contract for a faithful migration of the existing responsive
 status: final
 sources:
   - ../epic-nextjs-frontend.md
-updated: 2026-11-04
+updated: 2026-11-05
 colors:
   page: '#0F172A'
   header: '#1D4ED8'
@@ -112,7 +112,7 @@ components:
 
 ## Brand & Style
 
-The visual contract is a faithful continuation of the existing Tailspin Shelter website, not a new identity. Keep its dark slate canvas, strong blue header and links, cool-toned text, translucent slate panels, rounded corners, and restrained hover transitions. The system font stack is inherited from the current site. Do not introduce a new visual theme, imagery, or interaction motif.
+The visual contract continues the existing Tailspin Shelter website, not a new identity. Keep its dark slate canvas, strong blue header and links, cool-toned text, translucent slate panels, rounded corners, and restrained hover transitions. The system font stack is inherited from the current site. The approved adoption form uses this existing system rather than introducing a new theme, imagery, or interaction motif.
 
 ## Colors
 
@@ -149,6 +149,7 @@ Use `{rounded.xl}` (12px) for dog cards, dog details, and the About panel. Use `
 - **Dog card:** `{components.dog-card}`. The whole card is a link. Name and breed are left aligned in a padded panel; “View details” and a right-arrow icon finish the card. Hover changes the border to `{colors.blue-500-50}` and the name to `{colors.blue-400}`, reveals the existing blue (`{colors.blue-600-10}`) to purple (`{colors.purple-600-5}`) wash, lifts the card 6px, and increases its shadow.
 - **Pagination:** Centered row with Previous, page information, and Next. Available links use slate surfaces and borders with blue hover styling. An unavailable direction is muted, translucent, and non-interactive.
 - **Dog details:** `{components.dog-details}`. Padded panel with the name and status pill on the first row, breed/age/gender in two columns, then “About {name}” and the description.
+- **Adoption form:** A bordered, translucent slate panel below the details, using the existing panel radius and spacing. Labels and inputs use the established slate text and surfaces; the submit button uses the existing blue action color. Success and errors use the existing green and red text colors.
 - **About panel:** `{components.about-panel}`. Large bordered panel with a bold `{colors.blue-400}` heading and slate bottom rule, two prose paragraphs, a shaded note with a blue left border, and a centered blue “Back to Dogs” action.
 - **Back links:** `{components.back-link}`. Blue rounded links with the existing left-arrow icon. Preserve the distinct “Back to All Dogs” and “Back to Dogs” labels on their respective pages.
 - **Error surfaces:** Homepage uses a centered translucent slate panel and red error text. Dog-detail errors use a red-tinted background, red border/text, and padded rounded panel.
@@ -158,6 +159,6 @@ Use `{rounded.xl}` (12px) for dog cards, dog details, and the About panel. Use `
 | Do | Don't |
 |---|---|
 | Match the existing Astro layout, palette, typography, spacing, and responsive breakpoints. | Redesign, rebrand, or introduce a light/dark theme switch. |
-| Preserve the exact structure and appearance of current cards, panels, status labels, navigation, and hover states. | Add dog photos, icons beyond the existing arrows, decorative patterns, or new component types. |
+| Preserve the exact structure and appearance of current cards, panels, status labels, navigation, and hover states; style the approved adoption form with existing tokens. | Add dog photos, icons beyond the existing arrows, decorative patterns, or unrelated component types. |
 | Retain current responsive grid changes and the horizontal header navigation. | Invent a mobile menu, reorder page content, or alter the detail facts grid. |
 | Use the tokens here as the visual contract for the migration. | Let implementation differences from Astro change the rendered visual result. |

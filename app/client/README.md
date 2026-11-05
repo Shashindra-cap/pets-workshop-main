@@ -16,3 +16,5 @@ End-to-end tests start a seeded Flask API and a test-only API proxy:
 ```sh
 npm run test:e2e -- e2e-tests/homepage.spec.ts e2e-tests/homepage-states.spec.ts --project=chromium
 ```
+
+For isolated test runs, `NEXT_DEV_PORT`, `FLASK_PORT`, and `API_PROXY_PORT` override the default service ports, and `DATABASE_PATH` selects the test database file.

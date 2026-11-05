@@ -1,7 +1,11 @@
 import os
+import re
 from typing import Dict, List, Any, Optional
 from flask import Flask, jsonify, request, Response
-from models import init_db, db, Dog, Breed
+from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.exceptions import BadRequest
+from models import init_db, db, Dog, Breed, AdoptionRequest
+from models.dog import AdoptionStatus
 
 # Get the server directory path
 base_dir: str = os.path.abspath(os.path.dirname(__file__))
@@ -77,7 +81,77 @@ def get_dog(id: int) -> tuple[Response, int] | Response:
     
     return jsonify(dog)
 
+@app.route('/api/dogs/<int:id>/adoption-requests', methods=['POST'])
+def create_adoption_request(id: int) -> tuple[Response, int]:
+    if not request.is_json:
+        return jsonify({'error': 'Request body must be JSON'}), 400
+
+    try:
+        data = request.get_json()
+    except BadRequest:
+        return jsonify({'error': 'Request body must contain valid JSON'}), 400
+
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Request body must be a JSON object'}), 400
+
+    applicant_name = data.get('applicant_name')
+    if not isinstance(applicant_name, str) or not 2 <= len(applicant_name.strip()) <= 100:
+        return jsonify({
+            'error': 'Applicant name must be between 2 and 100 characters',
+            'field': 'applicant_name',
+        }), 400
+
+    applicant_email = data.get('applicant_email')
+    if (
+        not isinstance(applicant_email, str)
+        or len(applicant_email.strip()) > 254
+        or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', applicant_email.strip())
+    ):
+        return jsonify({
+            'error': 'A valid email address is required',
+            'field': 'applicant_email',
+        }), 400
+
+    dog = db.session.get(Dog, id)
+    if dog is None:
+        return jsonify({'error': 'Dog not found'}), 404
+    if dog.status is not AdoptionStatus.AVAILABLE:
+        return jsonify({'error': 'Dog is not available for adoption'}), 409
+
+    try:
+        updated_count = db.session.query(Dog).filter(
+            Dog.id == id,
+            Dog.status == AdoptionStatus.AVAILABLE,
+        ).update(
+            {Dog.status: AdoptionStatus.PENDING},
+            synchronize_session=False,
+        )
+
+        if updated_count != 1:
+            db.session.rollback()
+            current_dog = db.session.get(Dog, id)
+            if current_dog is None:
+                return jsonify({'error': 'Dog not found'}), 404
+            return jsonify({'error': 'Dog is not available for adoption'}), 409
+
+        adoption_request = AdoptionRequest(
+            dog_id=id,
+            applicant_name=applicant_name.strip(),
+            applicant_email=applicant_email.strip(),
+        )
+        db.session.add(adoption_request)
+        db.session.commit()
+    except SQLAlchemyError:
+        db.session.rollback()
+        app.logger.exception('Failed to create an adoption request for dog %s', id)
+        return jsonify({'error': 'Failed to create adoption request'}), 500
+
+    return jsonify({
+        'request': {'id': adoption_request.id, 'dog_id': id},
+        'dog': {'id': id, 'status': AdoptionStatus.PENDING.name},
+    }), 201
+
 ## HERE
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5100) # Port 5100 to avoid macOS conflicts
+    app.run(debug=True, port=int(os.environ.get('PORT', '5100')))

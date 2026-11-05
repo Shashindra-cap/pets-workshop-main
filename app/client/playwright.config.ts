@@ -1,13 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const serverDir = path.resolve(__dirname, '..', 'server');
-const testDbPath = path.join(serverDir, 'e2e_test_dogshelter.db');
-const flaskPort = 5100;
-const nextDevPort = 4321;
-const apiProxyPort = 5101;
+const flaskPort = Number(process.env.FLASK_PORT || 5100);
+const nextDevPort = Number(process.env.NEXT_DEV_PORT || 4321);
+const apiProxyPort = Number(process.env.API_PROXY_PORT || 5101);
+const nextDistDir = `.next-e2e-${nextDevPort}`;
 
 export default defineConfig({
   testDir: './e2e-tests',
@@ -40,7 +36,7 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
-      command: `npx cross-env API_SERVER_URL=http://localhost:${apiProxyPort} npm run dev`,
+      command: `npx cross-env API_SERVER_URL=http://localhost:${apiProxyPort} NEXT_DIST_DIR=${nextDistDir} next dev --hostname 0.0.0.0 --port ${nextDevPort}`,
       url: `http://localhost:${nextDevPort}`,
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
