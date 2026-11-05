@@ -57,7 +57,7 @@ export async function submitAdoptionRequest(
   }
   if (
     normalizedEmail.length > 254
-    || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalizedEmail)
+    || !/^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/.test(normalizedEmail)
   ) {
     fieldErrors.applicant_email = 'Enter a valid email address.';
   }

@@ -18,6 +18,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize the database with the app
 init_db(app)
 
+EMAIL_PATTERN = re.compile(
+    r"^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+"
+    r"(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
+    r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$"
+)
+
 @app.route('/api/dogs', methods=['GET'])
 def get_dogs() -> Response:
     page = request.args.get('page', 1, type=int)
@@ -105,20 +112,20 @@ def create_adoption_request(id: int) -> tuple[Response, int]:
     if (
         not isinstance(applicant_email, str)
         or len(applicant_email.strip()) > 254
-        or not re.fullmatch(r'[^@\s]+@[^@\s]+\.[^@\s]+', applicant_email.strip())
+        or not EMAIL_PATTERN.fullmatch(applicant_email.strip())
     ):
         return jsonify({
             'error': 'A valid email address is required',
             'field': 'applicant_email',
         }), 400
 
-    dog = db.session.get(Dog, id)
-    if dog is None:
-        return jsonify({'error': 'Dog not found'}), 404
-    if dog.status is not AdoptionStatus.AVAILABLE:
-        return jsonify({'error': 'Dog is not available for adoption'}), 409
-
     try:
+        dog = db.session.get(Dog, id)
+        if dog is None:
+            return jsonify({'error': 'Dog not found'}), 404
+        if dog.status is not AdoptionStatus.AVAILABLE:
+            return jsonify({'error': 'Dog is not available for adoption'}), 409
+
         updated_count = db.session.query(Dog).filter(
             Dog.id == id,
             Dog.status == AdoptionStatus.AVAILABLE,

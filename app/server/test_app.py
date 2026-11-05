@@ -151,16 +151,18 @@ class TestApp(unittest.TestCase):
     def test_create_adoption_request_rejects_invalid_fields(self):
         dog_id = self._create_db_dog()
 
-        response = self.app.post(
-            f'/api/dogs/{dog_id}/adoption-requests',
-            json={'applicant_name': 'Alex Example', 'applicant_email': 'not-an-email'},
-        )
+        for email in ('not-an-email', 'alex@foo..com'):
+            with self.subTest(email=email):
+                response = self.app.post(
+                    f'/api/dogs/{dog_id}/adoption-requests',
+                    json={'applicant_name': 'Alex Example', 'applicant_email': email},
+                )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()['field'], 'applicant_email')
-        with app.app_context():
-            self.assertEqual(db.session.get(Dog, dog_id).status, AdoptionStatus.AVAILABLE)
-            self.assertEqual(db.session.query(AdoptionRequest).count(), 0)
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.get_json()['field'], 'applicant_email')
+                with app.app_context():
+                    self.assertEqual(db.session.get(Dog, dog_id).status, AdoptionStatus.AVAILABLE)
+                    self.assertEqual(db.session.query(AdoptionRequest).count(), 0)
 
     def test_create_adoption_request_returns_not_found_for_missing_dog(self):
         response = self.app.post(
@@ -196,6 +198,21 @@ class TestApp(unittest.TestCase):
             )
 
         self.assertEqual(response.status_code, 500)
+        with app.app_context():
+            self.assertEqual(db.session.get(Dog, dog_id).status, AdoptionStatus.AVAILABLE)
+            self.assertEqual(db.session.query(AdoptionRequest).count(), 0)
+
+    def test_create_adoption_request_returns_json_on_lookup_database_error(self):
+        dog_id = self._create_db_dog()
+
+        with patch('app.db.session.get', side_effect=SQLAlchemyError('database unavailable')):
+            response = self.app.post(
+                f'/api/dogs/{dog_id}/adoption-requests',
+                json={'applicant_name': 'Alex Example', 'applicant_email': 'alex@example.com'},
+            )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_json()['error'], 'Failed to create adoption request')
         with app.app_context():
             self.assertEqual(db.session.get(Dog, dog_id).status, AdoptionStatus.AVAILABLE)
             self.assertEqual(db.session.query(AdoptionRequest).count(), 0)
