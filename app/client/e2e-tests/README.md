@@ -43,9 +43,9 @@ npm run test:e2e:debug
 
 Tests run against the real Flask server with a separate test database seeded with deterministic data. When Playwright starts, it:
 
-1. Seeds a test database (`e2e_test_dogshelter.db` in the server directory) with known dogs and breeds
+1. Seeds a test database (`e2e_test_dogshelter.db` in the server directory by default) with known dogs and breeds
 2. Starts the Flask server using the test database
-3. Starts the Astro dev server pointing at the Flask server
+3. Starts the API proxy and Next.js dev server pointing at Flask
 4. Runs all e2e tests against the live application
 
 The test data is defined in `../server/utils/seed_test_database.py`.
@@ -76,8 +76,10 @@ The tests cover the following core functionality:
 
 ## Configuration
 
-Tests are configured in `../playwright.config.ts` and automatically start the Flask and Astro servers before running tests.
+Tests are configured in `../playwright.config.ts` and automatically start the Flask, API proxy, and Next.js servers before running tests.
 
 The tests run against:
-- Client (Astro): http://localhost:4321
+- Client (Next.js): http://localhost:4321
 - Server (Flask): http://localhost:5100
+
+Set `NEXT_DEV_PORT`, `FLASK_PORT`, and `API_PROXY_PORT` to use alternate ports; set `DATABASE_PATH` to isolate the test database.
